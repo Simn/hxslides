@@ -1,0 +1,465 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+	<link href='http://fonts.googleapis.com/css?family=Open Sans:regular,semibold,italic,italicsemibold|Source Code Pro&amp;v2' rel='stylesheet' type='text/css'/>
+	<link href='http://fonts.googleapis.com/css?family=Source+Code+Pro:500' rel='stylesheet' type='text/css'/>
+	<link rel="stylesheet" type="text/css" href="css/style.css"/>
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+</head>
+
+<body>
+
+<div class="slide title">
+	<h1>Eval</h1>
+
+	<p class="visible">
+		<b>Simon Krajewski</b><br/>
+		<i>Haxe Summit 2017</i>
+	</p>
+</div>
+
+<div class="slide">
+	<h1>Overview</h1>
+
+	<ul>
+		<li>
+			Introduction
+		</li>
+		<li>
+			What do we do with source code?
+		</li>
+		<li>
+			The old macro interpreter
+		</li>
+		<li>
+			Eval development
+		</li>
+		<li>
+			Eval features
+		</li>
+	</ul>
+</div>
+
+
+<div class="slide">
+	<h1>What do we do with source code?</h1>
+
+	<ul>
+		<li>
+			<b>Interpret it</b>
+			<ul>
+				<li>Not much "setup": parsing</li>
+				<li>Slow at run-time</li>
+				<li>Examples: PHP, perl, hscript</li>
+			</ul>
+		</li>
+		<li>
+			<b>Compile it ahead of time (AOT)</b>
+			<ul>
+				<li>A lot of "setup": parsing, typing, optimizing</li>
+				<li>Fast at run-time</li>
+				<li>Examples: C (machine code), Java (bytecode), Haxe (other languages)</li>
+			</ul>
+		</li>
+		<li>
+			<b>Compile it just in time (JIT)</b>
+			<ul>
+				<li>Average "setup": parsing, optimize</li>
+				<li>Fast at run-time after initial compilation</li>
+				<li>Examples: JavaScript, Haxe macro interpreter</li>
+			</ul>
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>What does "compiling" mean?</h1>
+	<ul>
+		<li>Classic IT: Convert source code to machine code</li>
+		<li>Outside IT synonym: "assemble"</li>
+		<li><strike>Origin: Latin compilare = plunder/plagiarize</strike></li>
+		<li>Compiling high-level to high-level: transpiling</li>
+		<li>... but that sounds stupid</li>
+		<li>Informal: Assemble information from various sources and generate some output from it</li>
+		<li>Good news: Haxe is indeed a compiler</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>The old macro interpreter</h1>
+	<ul>
+		<li>
+			Clarification:
+			<ul>
+				<li>Past: &lt; Haxe 3 (what I worked on)</li>
+				<li>Present: Haxe 4 (what I'm working on)</li>
+				<li>Future: &gt; Haxe 4 (what I will be working on)</li>
+			</ul>
+		</li>
+		<li>Name: interp (from its file name interp.ml)</li>
+		<li>
+			Based on neko:
+			<ul>
+				<li>Re-use neko standard library</li>
+				<li>Compile Haxe code to neko representation, then "JIT" that</li>
+			</ul>
+		</li>
+		<li>
+			"JIT": Walk the abstract syntax tree (AST) and create nested functions from it
+		</li>
+		<li>
+			Run: Execute nested functions
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>interp: A Haxe "JIT" function</h1>
+
+	<pre>function eval(ctx:Context, e:Expr) : (Void -> Value)
+	return switch (e.expr) {
+		case EConst(True):
+			(() -> VBool(true));
+		case EConst(False):
+			(() -> VBool(false));
+		case EIf(econd, eif, eelse):
+			var econd = eval(ctx, econd);
+			var eif = eval(ctx, eif);
+			var eelse = eelse == null
+				? (() -> VNull)
+				: eval(ctx, eelse);
+			(() -> switch(econd()) {
+				case VBool(true): eif();
+				case _: eelse();
+			})
+	}</pre>
+</div>
+
+<div class="slide">
+	<h1>interp: An OCaml "JIT" function</h1>
+	<pre>let rec eval ctx (e,p) = match e with
+	| EConst True ->
+		(fun() -> VBool true)
+	| EConst False ->
+		(fun() -> VBool false)
+	| EIf (econd,eif,eelse) ->
+		let econd = eval ctx econd in
+		let eif = eval ctx eif in
+		let eelse = match eelse with
+			| None -> (fun() -> VNull)
+			| Some e -> eval ctx e
+		in
+		(fun() ->
+			match econd() with
+			| VBool true -> eif()
+			| _ -> eelse()
+		)</pre>
+</div>
+
+<div class="slide">
+	<h1>interp: Problems</h1>
+
+	<ul>
+		<li>
+			String and Array are slow because they wrap the native implementation:
+			<ul>
+				<li>Overhead</li>
+				<li>Strain on the garbage collection (GC)</li>
+			</ul>
+		</li>
+		<li>
+			Field access does binary integer search (O(log(N)))
+			<ul>
+				<li>O(1) vs. O(log(N)) does make a difference</li>
+			</ul>
+		</li>
+		<li>
+			The above problems could be fixed, but
+			<ul>
+				<li>
+					interp is neko-based and
+				</li>
+				<li>
+					neko relies on a monolithic output, so
+				</li>
+				<li>
+					any change requires full re-compilation.
+				</li>
+			</ul>
+		</li>
+		<li>
+			No way to fix that
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Eval: Initial idea</h1>
+
+	<ul style="list-style-type: none;">
+		<li>
+			Avoid neko completely, interpret typed AST
+		</li>
+		<li>
+			<img src="summit-2017-eval/macro-compilation-role.png" width="600"/>
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+		<h1>Eval: Initial idea properties</h1>
+
+		<ul>
+			<li>
+				(good) Low setup because no generation step
+			</li>
+			<li>
+				(good) Allows incremental compilation: Just replace the parts that changed
+			</li>
+			<li>
+				(bad) Have to implement new standard library
+			</li>
+			<li>
+				(bad) Might be a bit slower at run-time
+			</li>
+			<li>
+				But whatever, the decreased setup surely makes up for that ¯\^_^/¯
+			</li>
+		</ul>
+	</div>
+
+<div class="slide">
+	<h1>Eval: History</h1>
+
+	<ul>
+		<li>In 2016, Nicolas Cannasse was working on a HashLink interpreter
+			<ul>
+				<li>Generate and interpret HashLink bytecode</li>
+				<li>3x Faster than interp on our unit tests (source: Nicolas Cannasse)</li>
+				<li>Wasn't quite finished</li>
+				<li>Re-used the macro API, which was neatly factored out using an OCaml functor</li>
+			</ul>
+		</li>
+		<li>OCaml functor
+			<ul>
+				<li>Just imagine a Haxe interface with about 40 functions</li>
+				<li>If you implement these, your interpreter supports the macro API</li>
+			</ul>
+		</li>
+		<li>I probably would not have started working on Eval without that</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Eval: Development</h1>
+
+	<ul>
+		<li>Implement interpreter loop</li>
+		<li>Implement aforementioned interface</li>
+		<li>Implement most important parts of the standard library
+			<ul>
+				<li>Basic API: Bytes, EReg, Math, String</li>
+				<li>Data structures: Array, Map</li>
+				<li>Reflection: Reflect, Type</li>
+				<li>Sys: File, FileSystem, Sys</li>
+			</ul>
+		</li>
+		<li>After 2 weeks:
+			<ul>
+				<li>Most Haxe unit tests passed</li>
+				<li>sys-support unfinished</li>
+				<li>Unicode issues</li>
+				<li>polygonal-ds tests passed</li>
+			</ul>
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Eval: polygonal-ds</h1>
+
+	<ul>
+		<li>Yay, it works! Let's benchmark it!</li>
+		<li>neko: 0.4s</li>
+		<li>interp: 1.8s</li>
+		<li>eval: 4.2s</li>
+		<li>me: <img src="summit-2017-eval/crying.jpg" width="580" style="position: absolute; right: 17px; top: 193px;"/></li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Eval: Impostor syndrome</h1>
+
+	<ul>
+		<li>I didn't expect it to be that much slower...</li>
+		<li>Is my entire approach flawed?</li>
+		<li>Am I actually capable of doing this?</li>
+		<li>Maybe I should work at McDonalds</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Eval: Recovery</h1>
+
+	<ul>
+		<li>
+			Realization: I don't have to interpret the typed AST, I can do the same function "jitting" interp does.
+		</li>
+		<li>
+			I'll show 'em!
+		</li>
+		<li>
+			(1 day later)
+		</li>
+		<li>
+			eval: 1.2s
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Eval: Roller coaster</h1>
+
+	<ul>
+		<li>Let's try running some of the tink tests
+			<ul>
+				<li>tink_core: 30 tests, 29 failed, 1 success
+				<li>tink_something: assertion failure</li>
+				<li>tink_something_else: compiler crash</li>
+			</ul>
+		</li>
+		<li>How about the thx libraries?
+			<ul>
+				<li>Failed tests</li>
+				<li>Typing errors</li>
+			</ul>
+		</li>
+		<li>Many easy fixes:
+			<ul>
+				<li>Some assumptions about encoding from interp</li>
+				<li>Some <tt>#if eval</tt> required</li>
+				<li>Some assumptions about macro == neko</li>
+			</ul>
+		</li>
+		<li>More and more tests started passing</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Eval: Optimization</h1>
+
+	<ul>
+		<li>Use a real profiler</li>
+		<li>String operations could be better: Use ropes as underlying implementation</li>
+		<li>Field access was too slow: Change representation and calculate some offsets at "JIT"-time</li>
+		<li>Loops took a while: Detect and optimize some common cases</li>
+		<li>polygonal-ds: 0.4s</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Eval: Revelation</h1>
+
+	<ul>
+		<li>I had been working on this for a month and nobody had seen anything yet</li>
+		<li>Plus my wife hasn't seen me for that month</li>
+		<li>Push the eval branch</li>
+		<li>&lt;nadako&gt; oooh eval branch \o/</li>
+		<li>&lt;nadako&gt; hmm, for me it's actually slower</li>
+		<li>Fortunately, that was just a missing native implementation for something related to MD5 encoding</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Eval: Performance</h1>
+
+	<table class="table">
+		<thead><tr><th>what</th><th>neko</th><th>interp</th><th>eval</th></tr></thead>
+		<tbody>
+			<tr><td>polygonal-ds</td><td>0.4</td><td>1.8</td><td>0.4</td></tr>
+			<tr><td>haxe-checkstyle 1</td><td>9.5</td><td>44.6</td><td>5.0</td></tr>
+			<tr><td>haxe-checkstyle 2</td><td>3.2</td><td>21.5</td><td>2.4</td></tr>
+			<tr><td>thx.core</td><td>5.1</td><td>25.9</td><td>6.1</td></tr>
+			<tr><td>haxeparser std</td><td>5.8</td><td>19.1</td><td>4.0</td></tr>
+			<tr><td>dox</td><td>85.2</td><td>257.5</td><td>30.5</td></tr><tr><td>mandelbrot class</td><td>93.6</td><td>225.3</td><td>29.1</td></tr>
+			<tr><td>mandelbrot anon</td><td>59.7</td><td>97.8</td><td>24.6</td></tr>
+			<tr><td><a href="https://github.com/HaxeFoundation/haxe/issues/4549#issuecomment-198681507">array benchmark</a></td><td>33.4</td><td>202.1</td><td>19.4</td></tr>
+	</tbody></table>
+</div>
+
+<div class="slide">
+	<h1>Eval: Performance properties</h1>
+
+	<ul>
+		<li>Good with strings</li>
+		<li>Bad with numbers</li>
+		<li>Structural access (fields, arrays) is fast</li>
+		<li>Loops are okay, but could be better</li>
+		<li>Conditionals (if, switch) are good</li>
+		<li>Structure vs. class:
+			<ul>
+				<li>Read and write are equal</li>
+				<li>Construction of structures is faster because no constructor call</li>
+			</ul>
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Eval: Performance properties</h1>
+
+	<ul>
+		<li>Calls:
+			<ul>
+				<li>Static function (best)</li>
+				<li>Non-override instance method (22% slower)</li>
+				<li>Single-implementation interface method (22% slower)</li>
+				<li>Override and interface method (54% slower)</li>
+				<li>Field on anonymous structure or Dynamic (67% slower)</li>
+				<li>Closure (69% slower)</li>
+			</ul>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Eval feature: Timing</h1>
+
+	<ul style="list-style-type: none;">
+		<li>-D eval-times</li>
+		<li>Accurate per-function execution timing</li>
+		<li>
+<pre style="font-size:small">
+name                    | time(s) |   % |  p% |     # | info
+-------------------------------------------------------
+macro                   |   0.239 |   9 |   9 | 20799 |
+  execution             |   0.122 |   5 |  51 | 19649 |
+	parseInlineString   |   0.040 |   2 |  33 |    53 | haxe.macro.Context
+	typeof              |   0.020 |   1 |  17 |  3486 | haxe.macro.Context
+	localFunction1      |   0.016 |   1 |  13 |  3110 | unit.UnitBuilder.mkEq
+	mkEq                |   0.008 |   0 |   7 |  1597 | unit.UnitBuilder
+	localFunction2      |   0.007 |   0 |   6 |    52 | unit.UnitBuilder.read
+	read                |   0.007 |   0 |   6 |    52 | unit.UnitBuilder
+	typedAs             |   0.005 |   0 |   4 |   102 | unit.HelperMacros
+	addIssueClasses     |   0.003 |   0 |   3 |     2 | unit.TestIssues
+	load                |   0.003 |   0 |   2 |  6374 | haxe.macro.Context
+	follow              |   0.002 |   0 |   2 |  1799 | haxe.macro.Context
+	localFunction1      |   0.002 |   0 |   1 |   608 | unit.TestIssues.addIssueClasses
+</pre>
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Eval feature: Debugging</h1>
+
+	<h2>Live demo</h2>
+</div>
+
+<div class="slide">
+	<h1>Thank you!</h1>
+</div>
+
+<script type="text/javascript" src="js/app.js"></script>
+
+</body>
+</html>
