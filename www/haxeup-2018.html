@@ -1,0 +1,554 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+	<link href='http://fonts.googleapis.com/css?family=Open Sans:regular,semibold,italic,italicsemibold|Source Code Pro&amp;v2' rel='stylesheet' type='text/css'/>
+	<link href='http://fonts.googleapis.com/css?family=Source+Code+Pro:500' rel='stylesheet' type='text/css'/>
+	<link rel="stylesheet" type="text/css" href="css/style.css"/>
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+</head>
+
+<body>
+
+<div class="slide title">
+	<h1>Haxe Autumn Report</h1>
+
+	<p class="visible">
+		<b>Simon Krajewski</b><br/>
+		<i>HaxeUp 2018</i>
+	</p>
+</div>
+
+<div class="slide">
+	<h1>Timeline 2018</h1>
+
+	<ul>
+		<li>
+			February: 4.0.0.preview.3 release
+		</li>
+		<li>
+			May: Nicolas' Haxe 4.0 Talk at Haxe Summit, Seattle
+		</li>
+		<li>
+			June: 4.0.0.preview.4 release
+		</li>
+		<li>
+			September: haxe-evolution board meeting
+		</li>
+		<li>
+			October: HaxeUp
+		</li>
+	</ul>
+</div>
+
+
+<div class="slide">
+	<h1>Activity</h1>
+
+	<ul>
+		<li>
+			About 900 commits since preview.3 by 37 people
+		</li>
+		<li>
+			Open issues from ~900 to ~600
+		</li>
+		<li>
+			George Corney: Work on html-externs generator
+		</li>
+		<li>
+			Ben Morris: CLI cleanup
+		</li>
+		<li>
+			The usual suspects:
+			<ul>
+				<li>Andy: CI firefighter</li>
+				<li>Jens: Visual Studio Code </li>
+				<li>Cauê: Haxe builds</li>
+				<li>Hugh: hxcpp</li>
+				<li>Justin: lua</li>
+				<li>Alexander: PHP</li>
+				<li>Nicolas: HL and his many good ideas</li>
+			</ul>
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>`overload` is now a keyword</h1>
+	<h2>Just kidding</h2>
+</div>
+
+<div class="slide">
+	<h1>Unicode</h1>
+	<ul>
+		<li>Haxe 3: <pre>trace("Haxe is great".length); // 14 👍</pre></li>
+		<li>Haxe 3: <pre>trace("Haxé is great".length); // 14 or 15 💩</pre></li>
+		<li>Haxe 4: <pre>trace("Haxé is great".length); // 14 👍</pre></li>
+		<li>Haxe 4: <pre>trace("Haxeは最高だぞ！".length); // 10 🉑</pre></li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Unicode on our targets (Haxe 3)</h1>
+
+	<li>
+		<b>ASCII</b>: C/C++, lua, PHP, interp, neko
+	</li>
+	<li>
+		<b>UCS-2</b>: JavaScript, Flash
+	</li>
+	<li>
+		<b>UTF-16</b>: Java, C#
+	</li>
+	<li>
+		<b>UTF-32</b>: python (I think)
+	</li>
+
+	<h2>
+		What to do?
+	</h2>
+
+	<li>
+		Support "at least" UCS-2
+	</li>
+	<li>
+		Allow UTF-whatever
+	</li>
+	<li>
+		Deal with the ASCII targets
+	</li>
+</div>
+
+<div class="slide">
+	<h1>Why isn't UTF-8 the ultimate solution?</h1>
+
+	<ul>
+		<li>
+			Variable length: Slow random access
+		</li>
+		<li>
+			<pre>
+&nbsp;H  a  x ____é     i  s
+48 61 78 c3 a9 20 69 73
+			</pre>
+		</li>
+		<li>
+			Our String API focuses heavily on charCodeAt...
+		</li>
+		<li>
+			... which is technically random access.
+		</li>
+		<li>
+			O(n) instead of O(1)
+		</li>
+		<li>
+			bad
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Why might UCS-2 be better?</h1>
+
+	<ul>
+		<li>Fixed length: Fast random access</li>
+		<li>
+			<pre>
+____H ____a ____x ____é ____  ____i ____s
+48 00 61 00 78 00 e9 00 20 00 69 00 73 00
+			</pre>
+		</li>
+		<li>
+			Uses more space
+		</li>
+		<li>
+			Can only represent the Basic Multilingual Plane (65,536 code points)
+		</li>
+		<li>
+			Everything outside the BMP is represented as a surrogate pair
+		</li>
+		<li>
+			Which includes emojis 😞
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Surrogate Pairs</h1>
+
+	<ul>
+		<li>
+			Character consists of two code points
+		</li>
+		<li>
+			<pre>
+				trace("😞".length); // 2
+			</pre>
+		</li>
+		<li>
+			Same for UTF-16 and UCS-2
+		</li>
+		<li>
+			Not good...
+		</li>
+		<li>
+			... but if Java, C# and JavaScript do it, we can as well.
+		</li>
+		<li>
+			It's not like we could avoid it on these targets.
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Unicode on our targets (Haxe 4)</h1>
+
+	<li>
+		<b>UTF-8</b>: lua, PHP, Eval
+	</li>
+	<li>
+		<b>UCS-2</b>: JavaScript, Flash, HashLink, C++
+	</li>
+	<li>
+		<b>UTF-16</b>: Java, C#
+	</li>
+	<li>
+		<b>UTF-32</b>: python (I think)
+	</li>
+	<li>
+		<b>ASCII</b>: neko
+	</li>
+</div>
+
+<div class="slide">
+	<h1>Unicode in Eval</h1>
+
+	<h2>My 5 stages of grief</h2>
+	<ul>
+		<li>
+			1. Denial <img src="haxeup-2018/globalheader_logo.png" style="float:right; margin-right: 450px;"/>
+		</li>
+		<li>
+			2. Bargaining with UCS-2
+		</li>
+		<li>
+			3. Anger about emojis
+		</li>
+		<li>
+			4. Sadness about slow UTF-8
+		</li>
+		<li>
+			5. Acceptance of fast UTF-8
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Eval: UCS-2</h1>
+
+	<ul>
+		<li>Distinguish ASCII and non-ASCII strings</li>
+		<li>For ASCII strings, use direct access</li>
+		<li>For non-ASCII strings, shift everything left and right by 1</li>
+		<li><pre>
+if s.ascii then Bytes.get s.string index
+else Bytes.get s.sstring (index lsl 1)
+		</pre></li>
+		<li>
+			Huge if-fest
+		</li>
+		<li>
+			Have to convert everything to UTF-8 for OCaml interop (macros)
+		</li>
+		<li>
+			"This is fine."
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Eval: Emojis</h1>
+
+	<ul>
+		<li>Argument with Nicolas about string iteration</li>
+		<li><pre>
+for (code in "😞") {
+	trace(code);
+}
+		</pre></li>
+		<li>Should it print the char code of the emoji?</li>
+		<li>Or the two code points of the surrogate pair?</li>
+		<li>I don't want my users to worry about surrogate pairs...</li>
+		<li>So let's go UTF-8!</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Eval: Slow UTF-8</h1>
+
+	<ul>
+		<li>Straightforward implementation</li>
+		<li>Accept linear lookup on random access</li>
+		<li>"The unit tests seem kinda sorta alright"....</li>
+		<li>But dox doesn't even seem to terminate anymore</li>
+		<li>💩</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Eval: Fast UTF-8</h1>
+
+	<ul>
+		<li>
+			String access typically not truly random
+		</li>
+		<li>
+			Let each string instance keep a <b>cursor</b>:
+			<ul>
+				<li>a (characterOffset, byteOffset) tuple</li>
+				<li>when accessing characterOffset2, check distance to characterOffset</li>
+				<li>calculate byteOffset2 from byteOffset</li>
+				<li>store (characterOffset2, byteOffset2) as new cursor tuple</li>
+			</ul>
+		</li>
+		<li>
+			<pre class="byLine">
+"abcdéfghijklmnopqrstuvwxyz"
+      ^&nbsp;&nbsp;&nbsp;&nbsp;^
+    (5,6)(10,?)
+			</pre>
+		</li>
+		<li>
+			Only 10 - 5 = 5 steps required, instead of 10
+		</li>
+		<li>
+			Only 9000010 - 9000005 = 5 steps required, instead of 9000010
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Eval: Fast UTF-8</h1>
+
+	<ul>
+		<li>Faster than the previous UCS-2 implementation</li>
+		<li>(which makes no sense)</li>
+		<li>(and probably means that the implementation was 💩)</li>
+		<li>Don't use curors on very short (length &lt; 6) strings</li>
+		<li>Allow a second cursor if we jump around a lot</li>
+		<li>Always use (0,0) as a pseudo-cursor</li>
+		<li>Artifical examples can be found where this is still slow</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Eval: Fast UTF-8 numbers</h1>
+
+	<ul style="list-style-type: none;">
+		<li>With optimization:
+			<pre>
+  Suite: length 1000000
+          fastCodeAt(0): 6,674,674 (100.00%)
+     fastCodeAt(999999): 6,534,534 ( 97.90%)
+     fastCodeAt(500000): 6,293,293 ( 94.30%)
+          charCodeAt(0): 5,715,715 ( 85.63%)
+     charCodeAt(999999): 5,594,594 ( 83.82%)
+     charCodeAt(500000): 5,579,579 ( 83.59%)
+			</pre>
+		</li>
+		<li>Without optimization:
+			<pre>
+   Suite: length 1000000
+          fastCodeAt(0): 6,984,984 (100.00%)
+          charCodeAt(0): 6,054,054 ( 86.68%)
+     charCodeAt(500000):       336 (  0.00%)
+     fastCodeAt(500000):       333 (  0.00%)
+     charCodeAt(999999):       169 (  0.00%)
+     fastCodeAt(999999):       167 (  0.00%)
+			</pre>
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Non-Unicode stuff</h1>
+
+	<ul>
+		<li>Key-value iterators</li>
+		<li>inline call syntax</li>
+		<li>Type-level @:using</li>
+		<li>XML literals</li>
+		<li>Enum values as default function argument values</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Key-value iterators</h1>
+
+	<ul>
+		<li>
+			<pre>
+for (key => value in e) {
+	trace('$key => $value');
+}
+			</pre>
+		</li>
+		<li>
+			Supported for Map and its implementations
+		</li>
+		<li>
+			<pre>
+var map = [1 => "value1", 2 => "value"];
+for (key => value in map) {
+	trace('$key => $value');
+}
+			</pre>
+		</li>
+		<li>
+			Any class can support it by having a keyValueIterator field which returns a { key, value } structure
+		</li>
+		<li>
+			Support for Array and String is in the works
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>inline call syntax</h1>
+
+	<ul>
+		<li>
+			<pre>
+class Main {
+	static public function main() {
+		inlineMeMaybe();
+		while (true) {
+			inline inlineMeMaybe();
+			break;
+		}
+	}
+
+	static function inlineMeMaybe()
+	    trace("called me maybe");
+}
+			</pre>
+		</li>
+		<li>
+			<pre>
+	Main.inlineMeMaybe();
+	while(true) {
+		console.log("source/Main.hx:11:","called me maybe");
+		break;
+	}
+			</pre>
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Type-level @:using</h1>
+
+	<ul>
+		<pre>
+@:using(MyOption.MyOptionTools)
+enum MyOption<T> {
+	None;
+	Some(v:T);
+}
+
+class MyOptionTools {
+	static public inline function get<T>(o:MyOption<T>) {
+		return switch (o) {
+			case None: throw false;
+			case Some(v): v;
+		}
+	}
+}
+		</pre>
+		<pre>
+		var myOption = Some(12);
+		trace(myOption.get());
+		</pre>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>XML literals</h1>
+
+	<ul style="list-style-type: none;">
+		<li>
+			<pre>
+		var s = &lt;node key="value"&gt;
+			&lt;more/&gt;
+			&lt;node&gt;&lt;/node&gt;
+		&lt;/node&gt;;
+			</pre>
+		</li>
+		<li>
+			Right now, useful for:
+			<ul>
+				<li>
+					Getting "Markup literals must be processed by a macro" compiler errors
+				</li>
+				<li>
+					Messing up syntax highlighting in all IDEs and editors
+				</li>
+				<li>
+					Getting nostalgic about the time you wrote ActionScript 3
+				</li>
+			</ul>
+		</li>
+		<li>
+			Or:
+			<ul>
+				<li>
+					Feed it to a macro and process it somehow
+				</li>
+			</ul>
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Enum values as default function argument values</h1>
+
+	<ul>
+		<li>
+			<pre>
+class Main {
+	static public function main() {
+		trace(test()); // None
+	}
+
+	static function test(x = haxe.ds.Option.None) {
+		return x;
+	}
+}
+			</pre>
+		</li>
+		<li>
+			Does not work with Some(1).
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>So when can I test this?</h1>
+
+	<ul>
+		<li>
+			Once preview.5 is released
+		</li>
+		<li>
+			Alright...
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Thank you!</h1>
+</div>
+
+<script type="text/javascript" src="js/app.js"></script>
+
+</body>
+</html>
