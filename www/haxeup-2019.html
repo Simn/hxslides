@@ -1,0 +1,604 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+	<link href='http://fonts.googleapis.com/css?family=Open Sans:regular,semibold,italic,italicsemibold|Source Code Pro&amp;v2' rel='stylesheet' type='text/css'/>
+	<link href='http://fonts.googleapis.com/css?family=Source+Code+Pro:500' rel='stylesheet' type='text/css'/>
+	<link rel="stylesheet" type="text/css" href="css/style.css"/>
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+</head>
+
+<body>
+
+<div class="slide title">
+	<h1>Haxe Autumn Report</h1>
+
+	<p class="visible">
+		<b>Simon Krajewski</b><br/>
+		<i>HaxeUp 2019</i>
+	</p>
+</div>
+
+<div class="slide">
+	<h1>Introduction</h1>
+
+	<ul>
+		<li>
+			Simon Krajewski
+		</li>
+		<li>
+			Haxe user since 2010
+			<ul>
+				<li>Student thesis involving fluid simulation in flash player</li>
+				<li>More than 100 array access operations per cell per step</li>
+				<li>ActionScript 3: No fast array access</li>
+				<li>flash.Vector also too slow</li>
+				<li>Found <a href="http://ncannasse.fr/blog/virtual_memory_api">Nicolas's blog post about secret alchemy opcodes</a></li>
+				<li>Haxe up to the task</li>
+			</ul>
+		</li>
+		<li>
+			Haxe contributor since 2011
+		</li>
+		<li>
+			Main maintainer of the Haxe compiler since 2012
+		</li>
+		<li>
+			Founding member of the Haxe Foundation
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Introduction</h1>
+
+	<ul>
+		<li>
+			Attended World Wide Haxe 2014 and 2015 in Paris
+		</li>
+		<li>
+			Brought Josefiene into the community
+		</li>
+		<li>
+			First Haxe talk at World Wide Haxe 2016 in Paris
+		</li>
+		<li>
+			Second Haxe talk at Haxe Summit EU 2017 in Amsterdam
+		</li>
+		<li>
+			Started to organize HaxeUps in 2018
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Timeline 2019</h1>
+
+	<ul>
+		<li>
+			February - March: 4.0.0-rc.1 and 4.0.0-rc.2 releases
+		</li>
+		<li>
+			April: Haxe Foundation recruits
+				<ul>
+					<li>Aurel Bílý (6-months internship)</li>
+					<li>Aleksandr Kuzmenko (full-time)</li>
+				</ul>
+		</li>
+		<li>
+			May: Aleksandr' Haxe 4.0 Talk at Haxe Summit, Seattle
+		</li>
+		<li>
+			June: 4.0.0-rc.3 release
+		</li>
+		<li>
+			September: 4.0.0-rc4 and 4.0.0-rc5 releases
+		</li>
+		<li>
+			October: HaxeUp
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Shoutouts</h1>
+
+	<ul>
+		<li>
+			Andy Li: Unwavering CI work, port to Azure
+		</li>
+		<li>
+			Hugh Sanderson: hxcpp maintenance (despite our best efforts to make Haxe compilation as difficult as possible)
+		</li>
+		<li>
+			terurou and takashiski: Work on hxnodejs
+		</li>
+		<li>
+			Rudy G.: Improvements and fixes for the C# target
+		</li>
+		<li>
+			George Corney: Maintenance of HTML externs
+		</li>
+		<li>
+			Jens Fischer: Work on vshaxe
+		</li>
+		<li>
+			All the Haxe Foundation partners: big and small, former and current
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Announcement</h1>
+
+	<h2>
+		Release
+	</h2>
+	<ul>
+		<li>
+			neko 2.3.0
+		</li>
+	</ul>
+
+	<h2>
+		Release
+	</h2>
+	<ul>
+		<li>
+			<b>Haxe 4.0.0</b>
+		</li>
+		<li>
+			Download at <a href="https://haxe.org/download/">https://haxe.org/download/</a>
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>This talk</h1>
+
+	<ul>
+		<li>Overview of all new Haxe 4 features</li>
+		<li>See <a href="https://haxe.org/videos/conferences/haxe-summit-us-2019/haxe-4-whats-new-aleksandr-kuzmenko.html">Aleksandr's Haxe Summit 2019 talk</a></li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>New macro interpreter: eval</h1>
+	<ul>
+		<li>
+			Bigger
+		</li>
+		<li>
+			Faster
+		</li>
+		<li>
+			Stronger too
+		</li>
+		<li>
+			See <a href="https://haxe.org/videos/conferences/haxe-summit-2017/eval-haxe-macro-interpreter-simon-krajewski.html">my talk at Haxe Summit EU 2017</a>
+		</li>
+		<li> Since then:
+			<ul>
+				<li>Improved debugger</li>
+				<li>Stabilized API</li>
+				<li>Fixed many bugs</li>
+				<li>Reworked string implementation</li>
+			</ul>
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Unicode support</h1>
+	<ul>
+		<li>
+			See <a href="https://haxe.org/videos/conferences/haxeup-sessions-2018/haxe-autumn-report-simon-krajewski.html">my talk at HaxeUp October 2018</a>
+		</li>
+		<li><pre>"Haxeは最高だぞ！".length == 10</pre></li>
+		<li>Support at least UCS-2
+			<ul>
+				<li>JavaScript, Flash, HashLink, C++: <b>UCS-2</b></li>
+				<li>eval, PHP, lua: <b>UTF-8</b></li>
+				<li>Java, C#: <b>UTF-16</b></li>
+				<li>Python: <b>UTF-32</b> (probably)</li>
+			</ul>
+		</li>
+		<li>
+			No support on neko
+		</li>
+		<li>
+			Careful with surrogate pairs
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Key-value iterators</h1>
+
+	<ul>
+		<li><pre>
+class Main {
+	static function main() {
+		var map = [1 => "foo", 2 => "bar"];
+		for (key => value in map) {
+			trace(key, value);
+		}
+	}
+}
+		</pre>
+		</li>
+		<li>
+			Supported for Map
+		</li>
+		<li>
+			Not yet supported on Array
+		</li>
+		<li>
+			Custom iterators by implementing <pre>function keyValueIterator():Iterator&lt;{key:K, value:V}&gt;</pre>
+		</li>
+		<li>
+			Supported on String with <pre class="inline">using StringTools</pre>
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>@:using</h1>
+
+	<ul>
+		<pre>
+@:using(MyOption.MyOptionTools)
+enum MyOption<T> {
+	None;
+	Some(v:T);
+}
+
+class MyOptionTools {
+	static public inline function get<T>(o:MyOption<T>) {
+		return switch (o) {
+			case None: throw false;
+			case Some(v): v;
+		}
+	}
+}
+		</pre>
+		<pre>
+		var myOption = Some(12);
+		trace(myOption.get());
+		</pre>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Call-site inlining</h1>
+
+	<ul>
+		<li>
+			<pre>class Main {
+	static function f() return 12;
+	static public function main() {
+		trace(inline f());
+	}
+}</pre>
+		</li>
+		<li>
+			<pre>var Main = function() { };
+Main.main = function() {
+	console.log("source/Main.hx:4:",12);
+};
+Main.main();</pre>
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>ES6 output</h1>
+
+	<ul>
+		<li>
+			Add <pre class="inline">-D js-es=6</pre>
+		</li>
+		<li><pre>
+class Main {
+	static main() {
+		console.log("source/Main.hx:4:",12);
+	}
+}
+Main.main();
+		</pre>
+		</li>
+		<li>
+			Output is still a single .js file (no automated splitting)
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Enum abstract auto numbering/stringification</h1>
+
+	<ul>
+	<li><pre>enum abstract OverInt(Int) {
+	var A;     // 0
+	var B;     // 1
+	var C = 4; // 4
+	var D;     // 5
+}</pre></li>
+	<li><pre>enum abstract OverString(String) {
+	var First; // "First"
+	var Second; // "Second"
+}</pre></li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Syntax improvements</h1>
+
+	<ul>
+		<li>
+			<table>
+				<thead><th>Old</th><th>New</th></thead>
+				<tr>
+					<td><pre class="inline">@:enum abstract</pre></td>
+					<td><pre class="inline">enum abstract</pre></td>
+				</tr>
+				<tr>
+					<td><pre class="inline">@:extern function</pre></td>
+					<td><pre class="inline">extern function</pre></td>
+				</tr>
+				<tr>
+					<td><pre class="inline">typedef T = { > A, > B, }</pre></td>
+					<td><pre class="inline">typedef T = A &amp; B</pre></td>
+				</tr>
+<tr>
+					<td><pre class="inline">&lt;T:(A, B)&gt;</pre></td>
+					<td><pre class="inline">&lt;T:A & B&gt;</pre></td>
+				</tr>
+			</table>
+		</li>
+		<li>
+			Old syntax still supported, but deprecated
+		</li>
+		<li>
+			... except for multiple constraint syntax
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Arrow function type syntax</h1>
+
+	<ul>
+		<li>Haxe 3: <pre class="inline">String -> Int -> Void</pre></li>
+		<li>Haxe 4: <pre class="inline">(String, Int) -> Void</pre></li>
+		<li>Haxe 4: <pre class="inline">(a:String, b:Int) -> Void</pre></li>
+		<li>Haxe 3 syntax still supported and not deprecated</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Arrow function expression syntax</h1>
+
+	<ul>
+		<li><pre class="inline">[1, 2].map(a -> a * 2)</pre></li>
+		<li><pre class="inline">[1, 2].map((a) -> a * 2)</pre></li>
+		<li><pre class="inline">[1, 2].map((a:Int) -> a * 2)</pre></li>
+		<li><pre class="inline">[1, 2].sort((a, b) -> Reflect.compare(b, a))</pre></li>
+		<li><pre class="inline">[1, 2].sort((a:Int, b:Int) -> Reflect.compare(b, a))</pre></li>
+		<li>Implicit <pre class="inline">return</pre></li>
+		<li>No implicit block</li>
+		<li>Can't type-hint return type</li>
+		<li>Syntax similar to Java 8</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>JVM target</h1>
+
+	<ul>
+		<li>Add <pre class="inline">-D jvm</pre> when compiling to Java</li>
+		<li>Generates .jar with .class bytecode</li>
+		<li>No need for javac = much faster compilation time</li>
+		<li>No detour over syntax = less workarounds required</li>
+		<li>
+			Current state: experimental
+			<ul>
+				<li>Performance slightly worse than Java target</li>
+				<li>... but still really good in the grand scheme of things</li>
+				<li>Problems with MethodHandle usage (no proper support on android)</li>
+			</ul>
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>genjvm vs. genjava</h1>
+
+	<table>
+		<thead>
+			<th></th>
+			<th>genjvm</th>
+			<th>genjava</th>
+		</thead>
+		<tr>
+			<td>compilation speed</td>
+			<td>fast</td>
+			<td>not fast</td>
+		</tr>
+		<tr>
+			<td>performance</td>
+			<td>fast</td>
+			<td>faster</td>
+		</tr>
+		<tr>
+			<td>type parameters</td>
+			<td>work</td>
+			<td>work sometimes</td>
+		</tr>
+		<tr>
+			<td>function references</td>
+			<td>MethodHandle</td>
+			<td>Waneck-Functions</td>
+		</tr>
+	</table>
+
+	<ul>
+		<li>
+			General performance advice
+			<ul>
+				<li>
+					Allocations are fine (good GC)
+				</li>
+				<li>
+					Avoid class access through structures for JVM
+				</li>
+				<li>
+					Don't inline too much, the JIT knows what it's doing
+				</li>
+				<li>
+					Avoid <pre class="inline">Null&lt;T&gt;</pre> like the plague, especially when doing math
+				</li>
+			</ul>
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Null-safety</h1>
+
+	<ul>
+		<li>See <a href="https://haxe.org/videos/conferences/haxeup-sessions-2018/null-safety-alexandr-kuzmenko.html">Aleksandr's Null-Safety talk at HaxeUp October 2018</a></li>
+		<li>
+			<pre>	@:nullSafety(Strict)
+	static function safe(?arg:String) {
+		trace(arg.charAt(0));
+	}</pre>
+		</li>
+		<li>Null safety: Cannot access "charAt" of a nullable value.</li>
+		<li><pre>
+	@:nullSafety(Strict)
+	static function safe(?arg:String) {
+		if (arg != null) {
+			trace(arg.charAt(0));
+		}
+	}
+		</pre></li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Null-safety</h1>
+
+	<ul>
+		<li>
+			Configurable per package, type and field
+		</li>
+		<li>
+			Package: <pre class="inline">--macro nullSafety("my.pack", mode)</pre>
+		</li>
+		<li>
+			Type and field: <pre class="inline">@:nullSafety(mode)</pre>
+		</li>
+		<li>Where "mode" is Strict, Loose or Off</li>
+		<li>Global default: Off</li>
+		<li>Default if enabled: Loose</li>
+		<li>Key difference between Loose and Strict: Loose ignores potential mutability</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Null-safety</h1>
+
+	<ul>
+		<li>
+			<pre>
+class Main {
+	static var x:Null&lt;String&gt; = "foo";
+
+	@:nullSafety(Strict)
+	static public function main() {
+		if (x != null) {
+			sideEffect();
+			trace(x.charAt(0));
+		}
+	}
+
+	static function sideEffect() {}
+}
+			</pre>
+		</li>
+		<li>
+			Error because sideEffect could mutate x
+		</li>
+		<li>
+			(And because anyone else could if threaded)
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>final</h1>
+
+	<ul>
+		<li>
+			Replaces var-keyword: <pre class="inline">static final countdown = 0;</pre>
+		</li>
+		<li>
+			Field is immutable
+		</li>
+		<li>
+			Must be initialized directly or in constructor (for non-statics)
+		</li>
+		<li>
+			Can also be used at expression-level
+		</li>
+		<li>
+			... and as class-modifier to disallow inheritance
+		</li>
+		<li>
+			... and as field-modifier to disallow overriding
+		</li>
+		<li>
+			Allows some optimizations because the compiler can make assumptions
+		</li>
+		<li>
+			Not much yet, but maybe in the future!
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>The Future</h1>
+
+	<ul>
+		<li>Asynchronous I/O support (see Aurel's talk later today)</li>
+		<li>Coroutines (currently stuck in design phase)</li>
+		<li>Tail-call optimization
+			<ul>
+				<li>Tail-call optimization
+					<ul>
+						<li>Tail-call optimization
+							<ul>
+								<li>Tail-call optimization
+									<ul>
+										<li>Tail-call optimization dammit</li>
+									</ul>
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</li>
+			</ul>
+		</li>
+		<li>
+			Module-level functions
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Thank you!</h1>
+</div>
+
+<script type="text/javascript" src="js/app.js"></script>
+
+</body>
+</html>
