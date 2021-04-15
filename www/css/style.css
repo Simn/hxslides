@@ -282,3 +282,7 @@ body.black.v2 .slide.title p {
 	bottom : 20px;
 	color : #141419;
 }
+.inline {
+	display: inline;
+	border-left: 1px solid #bbb;
+}

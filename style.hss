@@ -318,3 +318,7 @@ body.black.v2 {
 		}
 	}
 }
+
+.inline {
+	display: inline;
+}

@@ -1,2 +1,3 @@
 -js www/js/app.js
 -main App
+-lib hx3compat

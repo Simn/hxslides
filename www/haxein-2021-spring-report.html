@@ -1,0 +1,256 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+	<link href='http://fonts.googleapis.com/css?family=Open Sans:regular,semibold,italic,italicsemibold|Source Code Pro&amp;v2' rel='stylesheet' type='text/css'/>
+	<link href='http://fonts.googleapis.com/css?family=Source+Code+Pro:500' rel='stylesheet' type='text/css'/>
+	<link rel="stylesheet" type="text/css" href="css/style.css"/>
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+</head>
+
+<body>
+
+<div class="slide title">
+	<h1>Haxe Spring Report</h1>
+
+	<p class="visible">
+		<b>Simon Krajewski</b><br/>
+		<i>HaxeIn 2021</i>
+	</p>
+</div>
+
+<div class="slide">
+	<h1>Introduction</h1>
+
+	<ul>
+		<li>
+			Simon Krajewski
+		</li>
+		<li>
+			Haxe contributor since 2011
+		</li>
+		<li>
+			Main maintainer of the Haxe compiler since 2012
+		</li>
+		<li>
+			Founding member of the Haxe Foundation
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>2020 Recap</h1>
+
+	<ul>
+		<li>
+			February: HaxeUp 2020 Hamburg @ Innogames
+		</li>
+		<li>
+			March: End of Western Civilization
+		</li>
+		<li>
+			May: 4.1.0 release (housekeeping release)
+		</li>
+		<li>
+			Through September: 4.1.4 release
+		</li>
+		<li>
+			October: HaxeIn 2020
+		</li>
+		<li>
+			December: 4.1.5
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>2020 Plans (review)</h1>
+
+	<ul>
+		<li>First half: 4.1 release
+			<ul>
+				<li>Tail-recursion elimination</li>
+				<li>SSL support in eval (macro interpreter)</li>
+				<li>Cross-target exception handling (haxe.Exception)</li>
+				<li>IDE improvements (InnoGames care package)</li>
+			</ul>
+		</li>
+		<li>Second half: 4.2 release
+			<ul>
+				<li>Asynchronous system library (asys)</li>
+				<li>Coroutines</li>
+				<li>Module-level functions</li>
+			</ul>
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>2021</h1>
+
+	<ul>
+		<li>
+			February: 4.2.0 and 4.2.1 releases
+		</li>
+		<li>
+			February: A new https://try.haxe.org
+		</li>
+		<li>
+			Huge thanks to RblSb and AlexHaxe
+		</li>
+		<li>
+			April: HaxeIn 2021
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>HaxeIn 2021</h1>
+
+	<ul>
+		<li>"some news from the compiler team"</li>
+		<li>Haxe compiler team: <img src="haxein-2021-spring-report/monkey-scratching-head.jpg" width="500"></img></li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Community circles:</h1>
+
+	<ul>
+		<li>Inner circle:
+			<ul>
+				<li><img src="haxein-2021-spring-report/slack-new-logo.svg" width="20"/> haxe-dev Slack
+					<ul>
+						<li>Core developers</li>
+						<li>Community contributors</li>
+						<li>Haxe Foundation partner ambassadors</li>
+					</ul>
+				</li>
+			</ul>
+		</li>
+		<li>
+			Broader community:
+			<ul>
+				<li><img src="haxein-2021-spring-report/Twitter_bird_logo_2012.svg.png" width="20"/> #haxe</li>
+				<li><img src="haxein-2021-spring-report/reddit-logo-16.png" width="20"/> r/haxe</li>
+				<li><img src="haxein-2021-spring-report/download.png" width="20"/> Discord</li>
+				<li>&#128293; https://community.haxe.org</li>
+			</ul>
+		</li>
+		<li>
+			Apathetic Haxe users:
+			<ul>
+				<li>Little interaction unless there's a problem</li>
+				<li>Updates = headaches</li>
+			</ul>
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Haxe update policy</h1>
+
+	<ul>
+		<li>In a perfect world: No breaking changes in minor releases</li>
+		<li>But: Technically, any bugfix can be considered a breaking change ("spacebar heating")</li>
+		<li>Parts of internal compiler structure exposed to macros</li>
+		<li>Internal changes can become difficult</li>
+		<li>Issues addressing technical debt</li>
+		<li>Bottom line: have to be pragmatic</li>
+		<li>&#128591; Please forgive us! &#128591;</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Haxe 4.2</h1>
+
+	<ul>
+		<li>Lots of bugfixes and improvements</li>
+		<li>Difficult to quantify:
+			<ul>
+				<li>"fixed Template.resolve when current context is not an object" (+16, -4)</li>
+				<li>"fixed priority of forwarded static extension" (+289, -269) (by Dmitrii Maganov) </li>
+				<li>... also spawned "Rework unify_field_call" (+874, -654)</li>
+				<li>... which lead to "Refactor operator handling" (+1,136, -930)</li>
+				<li>Well, just quantify changed lines!</li>
+				<li>"Reformat std" by Aurel300 (+35,041 −32,958)</li>
+			</ul>
+		</li>
+		<li>Shiny new features!</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Module-level fields</h1>
+
+	<ul>
+		<li>Originally: module-level functions</li>
+		<li>Also variables and properties</li>
+		<li>Thanks, nadako!</li>
+		<li>
+			<pre>
+// Main.hx
+var world = "World";
+
+function main() {
+	trace("Hello " + world);
+}
+			</pre>
+		</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Abstract classes</h1>
+
+	<ul>
+		<li>Classes that cannot be instantiated</li>
+		<li>Like in Java</li>
+		<li>
+			<pre>
+abstract class AbstractParent {
+	abstract function test():Void;
+}
+
+class AbstractChild extends AbstractParent {}
+			</pre>
+		</li>
+		<li><pre>
+This class extends abstract class AbstractParent but
+  doesn't implement the following method
+Implement it or make AbstractChild abstract as well
+... test()</pre>
+		</li>
+		<li>If multiple: "following methods", "Implement them"</li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Rest arguments</h1>
+
+	<ul>
+		<li><pre>
+function test(...rest:Int) {
+	for (x in rest) {
+		trace(x);
+	}
+}
+
+function main() {
+	test(1, 2, 3);
+}
+		</pre></li>
+		<li>Uses native capabilities where possible</li>
+		<li>Not (necessarily) an Array on all targets</li>
+		<li>Small API, including <tt>toArray</tt></li>
+		<li>See <a href="https://api.haxe.org/haxe/Rest.html">https://api.haxe.org/haxe/Rest.html</a></li>
+	</ul>
+</div>
+
+<div class="slide">
+	<h1>Thank you!</h1>
+</div>
+
+<script type="text/javascript" src="js/app.js"></script>
+
+</body>
+</html>
